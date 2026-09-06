@@ -49,16 +49,18 @@ export default async function StudentDashboard() {
         ) : (
           <ul className="space-y-2">
             {enrollments.map((e) => (
-              <li
-                key={e.id}
-                className="bg-white p-4 rounded shadow border border-gray-200"
-              >
-                <p className="font-medium text-gray-800">
-                  {e.course.title}
-                </p>
-                <p className="text-sm text-gray-500">
-                  {e.course.description}
-                </p>
+              <li key={e.id}>
+                <a
+                  href={`/dashboard/courses/${e.course.id}`}
+                  className="block bg-white p-4 rounded shadow border border-gray-200 hover:bg-gray-50"
+                >
+                  <p className="font-medium text-gray-800">
+                    {e.course.title}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    {e.course.description}
+                  </p>
+                </a>
               </li>
             ))}
           </ul>
