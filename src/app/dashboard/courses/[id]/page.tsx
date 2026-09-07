@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { redirect, notFound } from "next/navigation";
 import { PrismaClient } from "@prisma/client";
+import AssignmentForm from "./AssignmentForm";
 
 const prisma = new PrismaClient();
 
@@ -42,6 +43,11 @@ export default async function CourseDetailPage({
     redirect("/dashboard");
   }
 
+  const assignments = await prisma.assignment.findMany({
+    where: { courseId: id },
+    orderBy: { dueDate: "asc" },
+  });
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <a
@@ -56,10 +62,32 @@ export default async function CourseDetailPage({
       </h1>
       <p className="text-gray-600 mb-6">{course.description}</p>
 
+      {isTeacher && <AssignmentForm courseId={course.id} />}
+
       <div className="bg-white p-4 rounded shadow border border-gray-200">
-        <p className="text-gray-500">
-          Assignments and notes will appear here soon.
-        </p>
+        <h2 className="text-lg font-semibold text-gray-800 mb-3">
+          Assignments
+        </h2>
+        {assignments.length === 0 ? (
+          <p className="text-gray-500">No assignments yet.</p>
+        ) : (
+          <ul className="space-y-3">
+            {assignments.map((a) => (
+              <li
+                key={a.id}
+                className="border border-gray-200 rounded p-3"
+              >
+                <p className="font-medium text-gray-800">{a.title}</p>
+                <p className="text-sm text-gray-500">{a.description}</p>
+                {a.dueDate && (
+                  <p className="text-xs text-gray-400 mt-1">
+                    Due: {new Date(a.dueDate).toLocaleDateString()}
+                  </p>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   );
