@@ -3,6 +3,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { redirect, notFound } from "next/navigation";
 import { PrismaClient } from "@prisma/client";
 import AssignmentForm from "./AssignmentForm";
+import NoteForm from "./NoteForm";
 
 const prisma = new PrismaClient();
 
@@ -48,6 +49,11 @@ export default async function CourseDetailPage({
     orderBy: { dueDate: "asc" },
   });
 
+  const notes = await prisma.note.findMany({
+    where: { courseId: id },
+    orderBy: { createdAt: "desc" },
+  });
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <a
@@ -64,7 +70,7 @@ export default async function CourseDetailPage({
 
       {isTeacher && <AssignmentForm courseId={course.id} />}
 
-      <div className="bg-white p-4 rounded shadow border border-gray-200">
+      <div className="bg-white p-4 rounded shadow border border-gray-200 mb-6">
         <h2 className="text-lg font-semibold text-gray-800 mb-3">
           Assignments
         </h2>
@@ -84,6 +90,31 @@ export default async function CourseDetailPage({
                     Due: {new Date(a.dueDate).toLocaleDateString()}
                   </p>
                 )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {isTeacher && <NoteForm courseId={course.id} />}
+
+      <div className="bg-white p-4 rounded shadow border border-gray-200">
+        <h2 className="text-lg font-semibold text-gray-800 mb-3">
+          Notes
+        </h2>
+        {notes.length === 0 ? (
+          <p className="text-gray-500">No notes yet.</p>
+        ) : (
+          <ul className="space-y-3">
+            {notes.map((n) => (
+              <li
+                key={n.id}
+                className="border border-gray-200 rounded p-3"
+              >
+                <p className="font-medium text-gray-800">{n.title}</p>
+                <p className="text-sm text-gray-500 whitespace-pre-wrap">
+                  {n.fileUrl}
+                </p>
               </li>
             ))}
           </ul>
