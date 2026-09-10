@@ -4,6 +4,7 @@ import { redirect, notFound } from "next/navigation";
 import { PrismaClient } from "@prisma/client";
 import AssignmentForm from "./AssignmentForm";
 import NoteForm from "./NoteForm";
+import AttendanceForm from "./AttendanceForm";
 
 const prisma = new PrismaClient();
 
@@ -54,6 +55,30 @@ export default async function CourseDetailPage({
     orderBy: { createdAt: "desc" },
   });
 
+  let enrolledStudents: { id: string; name: string | null; email: string }[] = [];
+  if (isTeacher) {
+    const enrollments = await prisma.enrollment.findMany({
+      where: { courseId: id },
+      include: { student: true },
+    });
+    enrolledStudents = enrollments.map((e) => ({
+      id: e.student.id,
+      name: e.student.name,
+      email: e.student.email,
+    }));
+  }
+
+  let attendancePercent: number | null = null;
+  if (role === "STUDENT") {
+    const records = await prisma.attendance.findMany({
+      where: { courseId: id, studentId: userId },
+    });
+    if (records.length > 0) {
+      const presentCount = records.filter((r) => r.present).length;
+      attendancePercent = Math.round((presentCount / records.length) * 100);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <a
@@ -67,6 +92,17 @@ export default async function CourseDetailPage({
         {course.title}
       </h1>
       <p className="text-gray-600 mb-6">{course.description}</p>
+
+      {attendancePercent !== null && (
+        <div className="bg-white p-4 rounded shadow border border-gray-200 mb-6">
+          <p className="text-sm text-gray-600">Your Attendance</p>
+          <p className="text-2xl font-bold text-gray-800">
+            {attendancePercent}%
+          </p>
+        </div>
+      )}
+
+      {isTeacher && <AttendanceForm courseId={course.id} students={enrolledStudents} />}
 
       {isTeacher && <AssignmentForm courseId={course.id} />}
 
