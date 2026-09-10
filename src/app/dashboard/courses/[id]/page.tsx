@@ -5,6 +5,7 @@ import { PrismaClient } from "@prisma/client";
 import AssignmentForm from "./AssignmentForm";
 import NoteForm from "./NoteForm";
 import AttendanceForm from "./AttendanceForm";
+import AnnouncementForm from "./AnnouncementForm";
 
 const prisma = new PrismaClient();
 
@@ -55,6 +56,11 @@ export default async function CourseDetailPage({
     orderBy: { createdAt: "desc" },
   });
 
+  const announcements = await prisma.announcement.findMany({
+    where: { courseId: id },
+    orderBy: { createdAt: "desc" },
+  });
+
   let enrolledStudents: { id: string; name: string | null; email: string }[] = [];
   if (isTeacher) {
     const enrollments = await prisma.enrollment.findMany({
@@ -101,6 +107,29 @@ export default async function CourseDetailPage({
           </p>
         </div>
       )}
+
+      {isTeacher && <AnnouncementForm courseId={course.id} />}
+
+      <div className="bg-white p-4 rounded shadow border border-gray-200 mb-6">
+        <h2 className="text-lg font-semibold text-gray-800 mb-3">
+          Announcements
+        </h2>
+        {announcements.length === 0 ? (
+          <p className="text-gray-500">No announcements yet.</p>
+        ) : (
+          <ul className="space-y-3">
+            {announcements.map((a) => (
+              <li
+                key={a.id}
+                className="border border-gray-200 rounded p-3"
+              >
+                <p className="font-medium text-gray-800">{a.title}</p>
+                <p className="text-sm text-gray-500">{a.content}</p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
       {isTeacher && <AttendanceForm courseId={course.id} students={enrolledStudents} />}
 
