@@ -35,7 +35,7 @@ export async function POST(req: Request) {
         title,
         description: description || "",
         courseId,
-        dueDate: dueDate ? new Date(dueDate) : undefined,
+        dueDate: dueDate ? new Date(dueDate) : new Date(),
       },
     });
 
